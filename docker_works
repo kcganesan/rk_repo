@@ -1,0 +1,407 @@
+http://Scybernetwpad/wpad.dat
+
+10.142.125.44
+
+8080
+https://hub.docker.com/?ref=login
+rameshkhan
+Hsemar15h 
+
+3.17.207.115
+https://github.com/BarathArivazhagan/notes/tree/master/docker
+
+
+BarathArivazhagan/notes
+
+
+ec2-user@ec2-3-17-207-115.us-east-2.compute.amazonaws.com
+
+sudo su 
+yum install docker
+
+docker build -t my-image2 .
+ docker images
+docker run -it -d my-image2
+
+ docker exec -it 8a5fafe97049366418450786a59f0d91310c7c0351d50989da77915c80cc569a sh
+
+docker build -t my-image1 ./
+
+
+Volumes - 3 types
+==============
+docker
+bindmount
+tmpfs
+
+docker volume create demo
+
+docker volume create mysql_data
+
+docker run --name some-mysql -v mysql_data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -d mysql:latest
+
+
+docker stop some-mysql
+docker rm some-mysql
+
+https://www.portainer.io/installation/
+
+kitematic
+
+docker volume create portainer_data
+docker run -d -p 8000:8000 -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+admin1234
+
+18-Aug-2019
+ec2-user@ec2-18-221-159-225.us-east-2.compute.amazonaws.com
+service docker status
+
+docker run -d --tmpfs /app busybox sleep 1000
+
+# ip link
+~ route -n
+
+to get the containter ip
+
+# docker network inspect bridge
+# docker inspect <con_id>
+
+# yum install bridge*
+# brctl show
+
+[root@ip-172-31-32-71 ec2-user]# brctl show
+bridge name     bridge id               STP enabled     interfaces
+docker0         8000.02427fd18f4f       no              veth7afb4bc
+                                                        vethb341f8b
+[root@ip-172-31-32-71 ec2-user]# arp
+Address                  HWtype  HWaddress           Flags Mask            Iface
+ip-172-31-32-1.us-east-  ether   0a:9e:1e:06:63:00   C                     eth0
+[root@ip-172-31-32-71 ec2-user]#
+
+
+   "Containers": {
+            "9345f95c6a7b174b062c1a4cc57073a27fb72229ea428f136f7b944e2e9f77b5": {
+                "Name": "elegant_shaw",
+                "EndpointID": "0de3e7aca850af8e8790c2ab13b82a2e5d66ae1e88f5b27d85c1c66b4d9063a7",
+                "MacAddress": "02:42:ac:11:00:03",
+                "IPv4Address": "172.17.0.3/16",
+                "IPv6Address": ""
+            },
+            "f6410bde07626e1e62bdbf2724197feaadd6bb3114aa542bea077d2cdea1ae59": {
+                "Name": "naughty_bassi",
+                "EndpointID": "5208ecfc05a9879843df2b8b85053779cbe61af44ef4e8cf386a2b92811c403f",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            }
+
+
+docker run -d  --name busybox1 busybox sleep 1000
+
+docker run -d  --name nginx1 nginx 
+docker run -d  --name nginx2 nginx 
+
+docker ps -q | xargs -n 1 docker inspect --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}} {{ .Name }}' | sed 's/ \// /'
+
+docker exec -it 1d75cca6fe23
+
+apt -y update
+apt -y install curl
+apt -y install iputilx-ping - not working
+apt -y install iputils-ping
+
+
+
+create the own
+
+docker network create demo-bridge
+docker network ls
+docker run -d --net demo-bridge nginx
+docker network inspect demo-bridge
+brctl show
+ifconfig
+
+currently the ip between bridge and demo bridge will not work
+
+need to attach to get it work
+
+docker network connect demo-bridge nginx1 
+
+docker exec -it 3ce6a6425e0b sh
+
+docker network ls
+
+docker network rm
+
+Host network
+-----------------
+docker run -d --name nginx1 --net host nginx
+curl http://localhost:80
+
+none network
+--------------
+docker run -d --name nginx2 --net none nginx
+docker network inspect none
+docker run -d --name nginx2 --net none nginx
+
+macvlan
+--------
+docker network create macvlan -d macvlan
+docker network create macvlan -d macvlan -o parent=eth0
+docker run -d --net macvlan nginx
+docker: Error response from daemon: failed to create the macvlan port: operation not supported.
+
+
+[root@ip-172-31-32-71 ec2-user]# docker network rm macvlan
+macvlan
+[root@ip-172-31-32-71 ec2-user]# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+5ae10b72775c        bridge              bridge              local
+608c3afb5392        demo-bridge         bridge              local
+1b4c81430cb0        host                host                local
+3ada5ec48e5c        none                null                local
+[root@ip-172-31-32-71 ec2-user]#
+
+docker network create macvlan_test -d macvlan -o parent=eth0
+
+docker run -d -p 81:80 --net macvlan_test nginx
+
+docker stop $(docker ps -a -q) && docker rm $(docker ps -a -q)
+
+ec2-user@ec2-3-19-64-147.us-east-2.compute.amazonaws.com
+
+
+docker swarm
+----------------
+
+docker swarm init
+docker node ls
+to get the tocken again to join as client
+docker swarm join-token manager
+
+to deploy the container in the cluster
+docker service create --name nginx-service nginx
+
+to scaleup the container
+docker service scale nginx-service=5
+
+to create the containter with replicas
+docker service create -p 8080:80 --replicas=4 nginx
+
+###remove the docker forcefull and ensure the replicas are available 
+
+
+[root@ip-172-31-32-71 ec2-user]# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+5ae10b72775c        bridge              bridge              local
+608c3afb5392        demo-bridge         bridge              local
+dc3e777b5ff6        docker_gwbridge     bridge              local
+1b4c81430cb0        host                host                local
+q9867asew478        ingress             overlay             swarm
+fb031f40bf02        macvlan_test        macvlan             local
+3ada5ec48e5c        none                null                local
+[root@ip-172-31-32-71 ec2-user]#
+
+docker service ls
+
+to come out from the docker swarm - 
+---------------------------------------
+docker swarm leave
+
+katakoda.com/courses/docker/playground
+
+docker playground katakoda - url
+play with docker
+
+docker run nginx
+
+
+24-Aug-2019
+-----------
+docker images
+
+ex:
+
+# Builder srage
+FROM maven:3.5-jdk-8 as builder
+WORKDIR /opt
+COPY . /opt
+RUN mvn clean install
+
+
+#Final Stage
+
+FROM openjdk:8-jdk-alpine as final
+COPY --from=builder /opt/target/config-server-*.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
+
+to create the docker using the above Dockerfile 
+========================================
+docker build -t multi .
+
+to run
+======
+docker run -d --name dockermuti multi 
+
+docker compose
+==================
+you can have metadata and running multiple container usin
+
+
+https://github.com/BarathArivazhagan/notes/blob/master/docker-compose/install.md
+
+$ sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+$ sudo chmod +x /usr/local/bin/docker-compose
+
+
+Add it to the PATH variable
+$ export PATH=$PATH:/usr/local/bin/
+
+#docker-compose version
+
+
+to create the 
+vi docker-compose.yml
+
+version: "3"
+services:
+  nginix1:
+   image: nginx
+  nginix2:
+   image: nginx
+  httpd:
+   image: httpd
+
+#docker-compose up -d
+
+
+[root@ip-172-31-32-71 ec2-user]# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+5ae10b72775c        bridge              bridge              local
+608c3afb5392        demo-bridge         bridge              local
+dc3e777b5ff6        docker_gwbridge     bridge              local
+66eea0bd375a        ec2-user_default    bridge              local ----> it will use the default directory as networkname
+1b4c81430cb0        host                host                local
+fb031f40bf02        macvlan_test        macvlan             local
+3ada5ec48e5c        none                null                local
+
+[root@ip-172-31-32-71 ec2-user]# pwd
+/home/ec2-user
+
+docker network inspect ec2-user_default
+
+
+to shutdown all the docker
+
+#docker-compose down 
+
+
+=====================================
+build simultanuosly multiple docker
+
+create three folders
+and create the Dockerfile
+
+[root@ip-172-31-32-71 one]# cat Dockerfile
+FROM nginx
+RUN mkdir /ramesh
+
+# mkdir one two three
+cp Dockerfile /home/ec2-user/two
+cp Dockerfile /home/ec2-user/three
+
+[root@ip-172-31-32-71 ec2-user]# cat docker-compose.yml
+version: "3"
+services:
+  nginix1:
+   build: ./one
+  nginix2:
+   build: ./two
+  nginix3:
+   build: ./three
+
+docker-compose build
+
+[root@ip-172-31-32-71 ec2-user]# docker-compose build
+Building nginix1
+Step 1/2 : FROM nginx
+ ---> 5a3221f0137b
+Step 2/2 : RUN mkdir /ramesh
+ ---> Running in fa6378ef6c08
+Removing intermediate container fa6378ef6c08
+ ---> 2f2cdb6c856b
+Successfully built 2f2cdb6c856b
+Successfully tagged ec2-user_nginix1:latest
+Building nginix2
+Step 1/2 : FROM nginx
+ ---> 5a3221f0137b
+Step 2/2 : RUN mkdir /ramesh
+ ---> Using cache
+ ---> 2f2cdb6c856b
+Successfully built 2f2cdb6c856b
+Successfully tagged ec2-user_nginix2:latest
+Building nginix3
+Step 1/2 : FROM nginx
+ ---> 5a3221f0137b
+Step 2/2 : RUN mkdir /ramesh
+ ---> Using cache
+ ---> 2f2cdb6c856b
+Successfully built 2f2cdb6c856b
+Successfully tagged ec2-user_nginix3:latest
+
+
+
+[root@ip-172-31-32-71 ec2-user]# docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+[root@ip-172-31-32-71 ec2-user]# docker images
+REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE
+ec2-user_nginix1      latest              2f2cdb6c856b        55 seconds ago      126MB
+ec2-user_nginix2      latest              2f2cdb6c856b        55 seconds ago      126MB
+ec2-user_nginix3      latest              2f2cdb6c856b        55 seconds ago      126MB
+
+push mutiple build
+
+[root@ip-172-31-32-71 ec2-user]# cat docker-compose.yml
+version: "3"
+services:
+  nginix1:
+   build: ./one
+   image: rameshkhan/nginx1
+  nginix2:
+   build: ./two
+   image: rameshkhan/nginx2
+  nginix3:
+   build: ./three
+   image: rameshkhan/nginx3
+
+# docker-compose push
+
+[root@ip-172-31-32-71 ec2-user]# docker-compose push
+Pushing nginix1 (rameshkhan/nginx1:latest)...
+The push refers to repository [docker.io/rameshkhan/nginx1]
+d72b143873c5: Pushed
+12fdf55172df: Mounted from library/nginx
+002a63507c1c: Mounted from library/nginx
+1c95c77433e8: Mounted from library/httpd
+latest: digest: sha256:7f265c231e68208bea35b8a4cd3372427477a9224c0ea5a43ce5e6a60e9bdf6e size: 1155
+Pushing nginix2 (rameshkhan/nginx2:latest)...
+The push refers to repository [docker.io/rameshkhan/nginx2]
+d72b143873c5: Mounted from rameshkhan/nginx1
+12fdf55172df: Mounted from rameshkhan/nginx1
+002a63507c1c: Mounted from rameshkhan/nginx1
+1c95c77433e8: Mounted from rameshkhan/nginx1
+latest: digest: sha256:7f265c231e68208bea35b8a4cd3372427477a9224c0ea5a43ce5e6a60e9bdf6e size: 1155
+Pushing nginix3 (rameshkhan/nginx3:latest)...
+The push refers to repository [docker.io/rameshkhan/nginx3]
+d72b143873c5: Mounted from rameshkhan/nginx2
+12fdf55172df: Mounted from rameshkhan/nginx2
+002a63507c1c: Mounted from rameshkhan/nginx2
+1c95c77433e8: Mounted from rameshkhan/nginx2
+latest: digest: sha256:7f265c231e68208bea35b8a4cd3372427477a9224c0ea5a43ce5e6a60e9bdf6e size: 1155
+[root@ip-172-31-32-71 ec2-user]#
+
+
+https://hub.docker.com/
+ 
+check its avl on 
